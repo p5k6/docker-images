@@ -1,4 +1,4 @@
-FROM debezium/kafka:0.3
+FROM 529621320452.dkr.ecr.us-east-1.amazonaws.com/debezium-kafka
 
 MAINTAINER Debezium Community
 

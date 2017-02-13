@@ -3,6 +3,13 @@
 # Exit immediately if a *pipeline* returns a non-zero status. (Add -x for command tracing)
 set -e
 
+HOST_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+HOST_HOSTNAME=$(curl -s 169.254.169.254/latest/meta-data/local-hostname)
+ZOOKEEPER1_IP=$(getent hosts zookeeper-1.ecs.internal | awk '{print $1}')
+ZOOKEEPER2_IP=$(getent hosts zookeeper-2.ecs.internal | awk '{print $1}')
+ZOOKEEPER3_IP=$(getent hosts zookeeper-3.ecs.internal | awk '{print $1}')
+
+
 if [[ -z $1 ]]; then
     ARG1="start"
 else
@@ -43,8 +50,23 @@ case $ARG1 in
         if [[ -z "$SERVER_COUNT" ]]; then
             SERVER_COUNT=1
         fi
+
+        case $HOST_IP in 
+          $ZOOKEEPER1_IP)
+            SERVER_ID="1"
+            ;;
+          $ZOOKEEPER2_IP)
+            SERVER_ID="2"
+            ;;
+          $ZOOKEEPER3_IP)
+            SERVER_ID="3"
+            ;;
+        esac
+
+
         if [[ $SERVER_ID = "1" ]] && [[ $SERVER_COUNT = "1" ]]; then
             echo "Starting up in standalone mode"
+            echo ${SERVER_ID} > $ZK_HOME/data/myid
         else
             echo "Starting up ${SERVER_ID} of ${SERVER_COUNT}"
             #
@@ -56,7 +78,7 @@ case $ARG1 in
                 if [ "$SERVER_ID" = "$i" ];then
                     echo "server.$i=0.0.0.0:2888:3888" >> $ZK_HOME/conf/zoo.cfg
                 else
-                    echo "server.$i=zookeeper-$i:2888:3888" >> $ZK_HOME/conf/zoo.cfg
+                    echo "server.$i=zookeeper-$i.ecs.internal:2888:3888" >> $ZK_HOME/conf/zoo.cfg
                 fi
             done
             #

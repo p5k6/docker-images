@@ -6,10 +6,10 @@ MAINTAINER Debezium Community
 # Set the version, home directory, and MD5 hash.
 # MD5 hash taken from http://kafka.apache.org/downloads.html for this version of Kafka
 #
-ENV KAFKA_VERSION=0.10.0.1 \
+ENV KAFKA_VERSION=0.10.1.1 \
     SCALA_VERSION=2.11 \
     KAFKA_HOME=/kafka \
-    MD5HASH=702885A3F3EFADE1EE08435D29407474
+    MD5HASH=C32C75FF9B23CD6B64717F9EB5B4EB87
 
 #
 # Create a user and home directory for Kafka

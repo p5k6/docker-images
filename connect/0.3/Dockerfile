@@ -1,4 +1,4 @@
-FROM debezium/connect-base:0.3
+FROM debezium-connect-base:latest
 
 MAINTAINER Debezium Community
 
@@ -33,3 +33,6 @@ RUN curl -fSL -o /tmp/plugin.tar.gz \
     tar -xzf /tmp/plugin.tar.gz -C $KAFKA_CONNECT_PLUGINS_DIR/debezium --strip 1 &&\
     rm -f /tmp/plugin.tar.gz    
 
+COPY streamx $KAFKA_CONNECT_PLUGINS_DIR/streamx
+
+COPY config/hadoop-conf $KAFKA_HOME/config/hadoop-conf
