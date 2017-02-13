@@ -36,3 +36,13 @@ RUN curl -fSL -o /tmp/plugin.tar.gz \
 COPY streamx $KAFKA_CONNECT_PLUGINS_DIR/streamx
 
 COPY config/hadoop-conf $KAFKA_HOME/config/hadoop-conf
+
+USER root 
+RUN apt-get update && \
+      apt-get -y install sudo
+
+RUN apt-get install -y python
+
+RUN echo "kafka:kafka" | chpasswd && adduser kafka sudo
+
+USER kafka
