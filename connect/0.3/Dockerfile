@@ -44,5 +44,6 @@ RUN apt-get update && \
 RUN apt-get install -y python
 
 RUN echo "kafka:kafka" | chpasswd && adduser kafka sudo
+RUN echo "kafka ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER kafka
