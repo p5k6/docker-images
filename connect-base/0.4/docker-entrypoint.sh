@@ -2,6 +2,7 @@
 
 # Exit immediately if a *pipeline* returns a non-zero status. (Add -x for command tracing)
 set -e
+set -x
 
 if [[ -z "$BOOTSTRAP_SERVERS" ]]; then
     # Look for any environment variables set by Docker container linking. For example, if the container
@@ -13,9 +14,28 @@ if [[ -z "$HOST_NAME" ]]; then
     HOST_NAME=$(ip addr | grep 'BROADCAST' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
 fi
 
+# HOST_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+# ZOOKEEPER1_IP=$(getent hosts zookeeper-1.ecs.internal | awk '{print $1}')
+# ZOOKEEPER2_IP=$(getent hosts zookeeper-2.ecs.internal | awk '{print $1}')
+# ZOOKEEPER3_IP=$(getent hosts zookeeper-3.ecs.internal | awk '{print $1}')
+case $HOST_IP in 
+  $ZOOKEEPER1_IP)
+    BROKER_ID="1"
+    export ZOOKEEPER_HOST_NAME=zookeeper-1.ecs.internal
+    ;;
+  $ZOOKEEPER2_IP)
+    BROKER_ID="2"
+    export ZOOKEEPER_HOST_NAME=zookeeper-2.ecs.internal
+    ;;
+  $ZOOKEEPER3_IP)
+    BROKER_ID="3"
+    export ZOOKEEPER_HOST_NAME=zookeeper-3.ecs.internal
+    ;;
+esac
+
 : ${REST_PORT:=8083}
 : ${ADVERTISED_PORT:=9092}
-: ${ADVERTISED_HOST_NAME:=$HOST_NAME}
+: ${ADVERTISED_HOST_NAME:=$ZOOKEEPER_HOST_NAME}
 : ${GROUP_ID:=1}
 : ${OFFSET_FLUSH_INTERVAL_MS:=60000}
 : ${OFFSET_FLUSH_TIMEOUT_MS:=5000}
@@ -34,8 +54,8 @@ export CONNECT_CONFIG_STORAGE_TOPIC=$CONFIG_STORAGE_TOPIC
 export CONNECT_OFFSET_STORAGE_TOPIC=$OFFSET_STORAGE_TOPIC
 export CONNECT_KEY_CONVERTER=$KEY_CONVERTER
 export CONNECT_VALUE_CONVERTER=$VALUE_CONVERTER
-export CONNECT_INTERNAL_KEY_CONVERTER=$KEY_CONVERTER
-export CONNECT_INTERNAL_VALUE_CONVERTER=$VALUE_CONVERTER
+export CONNECT_INTERNAL_KEY_CONVERTER=$INTERNAL_KEY_CONVERTER
+export CONNECT_INTERNAL_VALUE_CONVERTER=$INTERNAL_VALUE_CONVERTER
 export CONNECT_TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS=$SHUTDOWN_TIMEOUT
 export CONNECT_OFFSET_FLUSH_INTERVAL_MS=$OFFSET_FLUSH_INTERVAL_MS
 export CONNECT_OFFSET_FLUSH_TIMEOUT_MS=$OFFSET_FLUSH_TIMEOUT_MS
@@ -150,7 +170,7 @@ case $1 in
                 sed -r -i "s@(^|^#)($prop_name)=(.*)@\2=${!env_var}@g" $KAFKA_HOME/config/connect-distributed.properties
             else
                 #echo "Adding property $prop_name=${!env_var}"
-                echo "$prop_name=${!env_var}" >> $KAFKA_HOME/config/connect-distributed.properties
+                echo -e "\n$prop_name=${!env_var}\n" >> $KAFKA_HOME/config/connect-distributed.properties
             fi
             echo "--- Setting property from $env_var: $prop_name=${!env_var}"
           fi
