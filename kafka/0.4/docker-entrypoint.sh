@@ -2,6 +2,28 @@
 
 # Exit immediately if a *pipeline* returns a non-zero status. (Add -x for command tracing)
 set -e
+HOST_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+ZOOKEEPER1_IP=$(getent hosts zookeeper-1.ecs.internal | awk '{print $1}')
+ZOOKEEPER2_IP=$(getent hosts zookeeper-2.ecs.internal | awk '{print $1}')
+ZOOKEEPER3_IP=$(getent hosts zookeeper-3.ecs.internal | awk '{print $1}')
+case $HOST_IP in 
+  $ZOOKEEPER1_IP)
+    BROKER_ID="1"
+    ZOOKEEPER_HOST_NAME=zookeeper-1.ecs.internal
+    ;;
+  $ZOOKEEPER2_IP)
+    BROKER_ID="2"
+    ZOOKEEPER_HOST_NAME=zookeeper-2.ecs.internal
+    ;;
+  $ZOOKEEPER3_IP)
+    BROKER_ID="3"
+    ZOOKEEPER_HOST_NAME=zookeeper-3.ecs.internal
+    ;;
+esac
+
+
+
+
 
 if [[ -z "$BROKER_ID" ]]; then
     BROKER_ID=1
@@ -35,12 +57,13 @@ if [[ -z "$ADVERTISED_PORT" ]]; then
     ADVERTISED_PORT=9092
 fi
 if [[ -z "$HOST_NAME" ]]; then
+    #HOST_NAME=$ZOOKEEPER_HOST_NAME
     HOST_NAME=$(ip addr | grep 'BROADCAST' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
 fi
 
 : ${PORT:=9092}
 : ${ADVERTISED_PORT:=9092}
-: ${ADVERTISED_HOST_NAME:=$HOST_NAME}
+: ${ADVERTISED_HOST_NAME:=$ZOOKEEPER_HOST_NAME}
 export KAFKA_ADVERTISED_PORT=$ADVERTISED_PORT
 export KAFKA_ADVERTISED_HOST_NAME=$ADVERTISED_HOST_NAME
 export KAFKA_PORT=$PORT
@@ -51,6 +74,8 @@ unset ADVERTISED_HOST_PORT
 unset ADVERTISED_HOST_NAME
 echo "Using KAFKA_ADVERTISED_PORT=$KAFKA_ADVERTISED_PORT"
 echo "Using KAFKA_ADVERTISED_HOST_NAME=$KAFKA_ADVERTISED_HOST_NAME"
+export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${ZOOKEEPER_HOST_NAME}:9092
+export KAFKA_LISTENER=PLAINTEXT://0.0.0.0:9092
 
 #
 # Set up the JMX options
