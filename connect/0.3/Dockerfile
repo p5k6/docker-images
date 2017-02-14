@@ -41,9 +41,15 @@ USER root
 RUN apt-get update && \
       apt-get -y install sudo
 
-RUN apt-get install -y python
+RUN curl -fSL -o /tmp/get-pip.py \
+    https://bootstrap.pypa.io/get-pip.py &&\
+    python /tmp/get-pip.py
+
+RUN apt-get install -y python python-dev python-pip
 
 RUN echo "kafka:kafka" | chpasswd && adduser kafka sudo
 RUN echo "kafka ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER kafka
+
+RUN alias ll="ls-larth"
