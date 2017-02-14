@@ -1,4 +1,4 @@
-FROM debezium/connect-base:0.4
+FROM debezium/connect-base:latest
 
 MAINTAINER Debezium Community
 
@@ -9,7 +9,7 @@ ENV DEBEZIUM_VERSION=0.4.0 \
 # Create a single `$KAFKA_CONNECT_PLUGINS_DIR/debezium` directory into which we'll place all of our JARs and files.
 #
 # Debezium connectors share some dependencies and JARs, so if we put each connector into a separate directory
-# then we'd have JARs appearing in multiple places on Kafka Connect's flat classpath, and we'd get 
+# then we'd have JARs appearing in multiple places on Kafka Connect's flat classpath, and we'd get
 # NoSuchMethod exceptions.
 
 RUN mkdir $KAFKA_CONNECT_PLUGINS_DIR/debezium
@@ -21,7 +21,7 @@ RUN curl -fSL -o /tmp/plugin.tar.gz \
                  $MAVEN_CENTRAL/io/debezium/debezium-connector-mysql/$DEBEZIUM_VERSION/debezium-connector-mysql-$DEBEZIUM_VERSION-plugin.tar.gz &&\
     echo "933c4ddf51f1cb8572ea1fe1c822d416  /tmp/plugin.tar.gz" | md5sum -c - &&\
     tar -xzf /tmp/plugin.tar.gz -C $KAFKA_CONNECT_PLUGINS_DIR/debezium --strip 1 &&\
-    rm -f /tmp/plugin.tar.gz    
+    rm -f /tmp/plugin.tar.gz
 
 
 #
@@ -31,9 +31,18 @@ RUN curl -fSL -o /tmp/plugin.tar.gz \
                  $MAVEN_CENTRAL/io/debezium/debezium-connector-mongodb/$DEBEZIUM_VERSION/debezium-connector-mongodb-$DEBEZIUM_VERSION-plugin.tar.gz &&\
     echo "863bc93f392a1c8e07c0abcad5bc0979  /tmp/plugin.tar.gz" | md5sum -c - &&\
     tar -xzf /tmp/plugin.tar.gz -C $KAFKA_CONNECT_PLUGINS_DIR/debezium --strip 1 &&\
-    rm -f /tmp/plugin.tar.gz    
+    rm -f /tmp/plugin.tar.gz
 
+COPY streamx $KAFKA_CONNECT_PLUGINS_DIR/streamx
 
+COPY config/hadoop-conf $KAFKA_HOME/config/hadoop-conf
+
+USER root
+RUN apt-get update && \
+      apt-get -y install sudo
+
+RUN curl -fSL -o /tmp/get-pip.py \
+    https://bootstrap.pypa.io/get-pip.py &&\
 #
 # Download PostgreSQL connector, verify the contents, and then install ...
 #
@@ -41,5 +50,6 @@ RUN curl -fSL -o /tmp/plugin.tar.gz \
                  $MAVEN_CENTRAL/io/debezium/debezium-connector-postgres/$DEBEZIUM_VERSION/debezium-connector-postgres-$DEBEZIUM_VERSION-plugin.tar.gz &&\
     echo "32e7ea80d3edb3e488a4674c196e8087  /tmp/plugin.tar.gz" | md5sum -c - &&\
     tar -xzf /tmp/plugin.tar.gz -C $KAFKA_CONNECT_PLUGINS_DIR/debezium --strip 1 &&\
-    rm -f /tmp/plugin.tar.gz    
+    rm -f /tmp/plugin.tar.gz
 
+RUN alias ll="ls-larth"
