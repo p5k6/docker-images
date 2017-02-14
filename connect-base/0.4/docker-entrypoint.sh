@@ -14,10 +14,10 @@ if [[ -z "$HOST_NAME" ]]; then
     HOST_NAME=$(ip addr | grep 'BROADCAST' -A2 | tail -n1 | awk '{print $2}' | cut -f1  -d'/')
 fi
 
-# HOST_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
-# ZOOKEEPER1_IP=$(getent hosts zookeeper-1.ecs.internal | awk '{print $1}')
-# ZOOKEEPER2_IP=$(getent hosts zookeeper-2.ecs.internal | awk '{print $1}')
-# ZOOKEEPER3_IP=$(getent hosts zookeeper-3.ecs.internal | awk '{print $1}')
+HOST_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
+ZOOKEEPER1_IP=$(getent hosts zookeeper-1.ecs.internal | awk '{print $1}')
+ZOOKEEPER2_IP=$(getent hosts zookeeper-2.ecs.internal | awk '{print $1}')
+ZOOKEEPER3_IP=$(getent hosts zookeeper-3.ecs.internal | awk '{print $1}')
 case $HOST_IP in 
   $ZOOKEEPER1_IP)
     BROKER_ID="1"
